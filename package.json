@@ -1,0 +1,23 @@
+{
+  "name": "network-pong",
+  "description": "network pong, duh!",
+  "version": "0.0.1",
+  "keywords": [ "game", "multiplayer" ],
+  "maintainers": [
+    { "name": "Elijah Insua", "web": "http://tmpvar.com" }
+  ],
+  "contributors": [
+    { "name": "Elijah Insua", "web": "http://tmpvar.com" }
+  ],
+  "licenses": [ "MIT" ],
+  "repositories": {
+    "type": "git",
+    "url": "http://github.com/network-pong.git"
+  },
+  "dependencies": {
+    "carena"   : "*",
+    "connect"  : "*",
+    "socket.io": ">=0.6.0"
+  }
+}
+
