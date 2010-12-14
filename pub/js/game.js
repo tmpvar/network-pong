@@ -42,8 +42,8 @@
   };
 
   ns.ball = carena.build({
-    width: 20,
-    height: 20,
+    width: 10,
+    height: 10,
     x : 190,
     y : 240,
     style : {
