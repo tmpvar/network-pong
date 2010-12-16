@@ -13,7 +13,7 @@ var connect = require('connect'),
           res.end();
         });
       })
-    ), game, clients = [], lobby = [], games = [], ready = [], clientId = 0, gameId;
+    ), game, clients = [], lobby = [], games = [], ready = [], clientId = 0;
 
 server.listen(1972);
 
@@ -62,13 +62,18 @@ game.on('connection', function(client) {
         ready.push(client);
         if (ready.length > 1) {
           // Unshift 2 clients off and create a game
-          gameId++;
           var player1 = ready.shift(), player2 = ready.shift();
+
 
           games.push({
             gameId  : gameId,
-            clients : [player1, player2]
+            players : [player1, player2]
           });
+          var gameId = games.length-1;
+
+          player1.game = gameId;
+          player2.game = gameId;
+
           var clientMsg = {
             type    : "game.new",
             gameId  : gameId,
@@ -82,8 +87,13 @@ game.on('connection', function(client) {
 
         }
       break;
-      case 'paddle':
-
+      case 'paddle.move':
+        // Only 2 players, one or the other..
+        if (games[client.game].players[0] === client) {
+          games[client.game].players[1].send(msg);
+        } else {
+          games[client.game].players[0].send(msg);
+        }
       break;
       case 'lobby.message':
         msg.client = client._id;

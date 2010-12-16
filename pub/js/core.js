@@ -57,6 +57,13 @@ window.networkPong = {};
       case 'game.new':
         ns.lobby.child(0).prepend("\nNew Game! Player #" + msg.players.join(" vs Player #"));
       break;
+      case 'game.join':
+        ns.camera.target = ns.game;
+      break;
+      case 'paddle.move':
+        // TODO: do client prediction
+        ns.paddles.remote.x = msg.x;
+      break;
     }
   });
 })(jQuery);

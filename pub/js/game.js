@@ -100,7 +100,11 @@
     ns.paddles.local.velocity.x = x-ns.paddles.local.x;
 
     ns.paddles.local.x = x;
-    ns.paddles.remote.x = x;
+    ns.socket.send({
+      type : "paddle.move",
+      x    : x
+    })
+
   });
 
   ns.ball.x = Math.floor(ns.canvas.width/2) - Math.floor(ns.ball.width/2);
