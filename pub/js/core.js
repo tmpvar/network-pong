@@ -51,6 +51,9 @@ window.networkPong = {};
       case 'player.disconnected' :
         ns.lobby.child(0).append("\nPlayer Disconnected, " + msg.clients.total + " players online");
       break;
+      case 'lobby.message':
+        ns.lobby.child(0).prepend("\nPlayer [" + msg.client + "] says: " + msg.text);
+      break;
 
     }
 

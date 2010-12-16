@@ -2,12 +2,34 @@
 
   ns.lobby = carena.build({}, ['carena.Box']);
 
+  // TODO: THIS IS A HACK!!!
+  window.addEventListener('keydown', function(ev) {
+
+    if (ev.keyCode === 13) {
+      if (input.toString().length > 0) {
+        ns.socket.send({
+          type : "lobby.message",
+          text : input.toString()
+        });
+        input.fromString("");
+        // TODO: fix cider.Cursor!
+        input.cursor.pos(0,0);
+      }
+      ev.stopPropagation();
+      ev.stopImmediatePropagation();
+    }
+
+  }, true);
+
+  // END HACK
+
+
   var chat = carena.build({
     x      : 5,
     y      : 20,
     width  : ns.canvas.width-10,
     height : ns.canvas.height - 50,
-    text   : 'hrm',
+    text   : '',
     style  : {
       color : 'black',
       backgroundColor: 'grey',
@@ -20,7 +42,7 @@
     y      : ns.renderer.canvas.height - 30,
     width  : ns.renderer.canvas.width - 10,
     height : 30,
-    text   : 'a',
+    text   : '',
     style  : {
       color : 'white',
       backgroundColor: 'white',

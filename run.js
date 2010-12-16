@@ -13,7 +13,7 @@ var connect = require('connect'),
           res.end();
         });
       })
-    ), game, clients = [], lobby = [], games = [], ready = [];
+    ), game, clients = [], lobby = [], games = [], ready = [], clientId = 0;
 
 server.listen(1972);
 
@@ -23,26 +23,14 @@ game = io.listen(server, {
 });
 
 game.on('connection', function(client) {
-
+  client._id = ++clientId;
   clients.push(client);
   lobby.push(client);
 
   // setup the client
   client.status = { ready : false };
 
-  // TODO: add to lobby
-
-
-  client.send({
-    type      : 'connected',
-    clients   :  {
-      total   : clients.length,
-      ingame  : games.length*2,
-      waiting : lobby.length
-    }
-  });
-
-  client.broadcast({
+  game.broadcast({
     type      : 'player.connected',
     clients   :  {
       total   : clients.length,
@@ -64,18 +52,20 @@ game.on('connection', function(client) {
         waiting : lobby.length
       }
     });
-
   });
 
   client.on('message', function(msg) {
     if (!msg || !msg.type) { return; }
     switch (msg.type) {
       case 'ready' :
-        console.log("client is ready!");
         client.status.ready = true;
       break;
       case 'paddle':
 
+      break;
+      case 'lobby.message':
+        msg.client = client._id;
+        game.broadcast(msg);
       break;
 
 
