@@ -129,7 +129,6 @@
       {
         ns.ball.velocity.y = Math.abs(ns.ball.velocity.y);
         ns.ball.velocity.x -= ns.paddles.remote.velocity.x;
-        console.log("bouncy", ns.ball.velocity.x)
       }
     } else if (y < 0) {
       resetBall(ns.ball);

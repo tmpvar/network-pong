@@ -40,9 +40,25 @@ game.on('connection', function(client) {
   });
 
 
-  client.on('disconnect', function(client) {
+  client.on('disconnect', function() {
+
     clients.splice(clients.indexOf(client));
     lobby.splice(lobby.indexOf(client));
+
+
+console.log(client.game)
+    if (typeof client.game !== 'undefined') {
+      var endGame = {
+        type : 'game.end'
+      };
+
+      // Only 2 players, one or the other..
+      if (games[client.game].players[0] === client) {
+        games[client.game].players[1].send(endGame);
+      } else {
+        games[client.game].players[0].send(endGame);
+      }
+    }
 
     game.broadcast({
       type      : 'player.disconnected',
@@ -52,6 +68,7 @@ game.on('connection', function(client) {
         waiting : lobby.length
       }
     });
+
   });
 
   client.on('message', function(msg) {

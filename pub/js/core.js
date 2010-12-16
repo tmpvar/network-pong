@@ -64,6 +64,15 @@ window.networkPong = {};
         // TODO: do client prediction
         ns.paddles.remote.x = msg.x;
       break;
+      case 'game.end':
+        // TODO: cleanup state
+        console.log("game ended!")
+        ns.camera.target = ns.lobby;
+        // TODO: "ready" should probably be done via a button
+        ns.socket.send({
+          type : "ready"
+        });
+      break;
     }
   });
 })(jQuery);
