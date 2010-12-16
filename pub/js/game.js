@@ -107,9 +107,6 @@
   ns.ball.y = Math.floor(ns.canvas.height/2) - Math.floor(ns.ball.height/2);
   ns.ball.velocity.y = 1;
 
-  // Jump immediately into the game.. for now
-  ns.camera.target = ns.game;
-
   // Move the ball
   setInterval(function() {
     var x           = ns.ball.x + ns.ball.velocity.x,

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "carena"   : "*",
+    "cider"    : "*",
     "connect"  : "*",
     "socket.io": ">=0.6.0"
   }

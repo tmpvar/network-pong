@@ -1,10 +1,14 @@
+
+window.networkPong = {};
+
 (function($){
-  var ns     = window.networkPong = {},
+  var ns     = window.networkPong,
       frame  = 0,
       last   = (new Date()).getTime(),
-      now;
+      now, connected = false;
 
-  ns.canvas = $("#pong-canvas")[0]
+  ns.canvas = $("#pong-canvas")[0];
+  ns.defaultFont = "16px ProggyClean";
 
   // Initial setup
   ns.renderer = carena.build({}, ["carena.Renderer"], {canvas: ns.canvas});
@@ -24,4 +28,33 @@
     frame = 0;
   },1000);
 
+  // Setup websocket/flashsocket connection to the server
+  ns.socket = new io.Socket(null, {port: 1972, rememberTransport: false});
+  ns.socket.connect();
+  ns.socket.on('message', function(msg) {
+    if (!msg || !msg.type) { return; }
+    // Ready for playtime.
+    if (!connected) {
+      ns.socket.send({
+        type : "ready"
+      });
+      connected = true;
+    }
+
+    switch (msg.type) {
+      case 'connected':
+        ns.lobby.child(0).fromString("connected!\n" + msg.clients.total + " players online");
+      break;
+      case 'player.connected' :
+        ns.lobby.child(0).append("\nPlayer Connected, " + msg.clients.total + " players online");
+      break;
+      case 'player.disconnected' :
+        ns.lobby.child(0).append("\nPlayer Disconnected, " + msg.clients.total + " players online");
+      break;
+
+    }
+
+
+
+  });
 })(jQuery);
