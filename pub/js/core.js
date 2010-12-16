@@ -54,10 +54,9 @@ window.networkPong = {};
       case 'lobby.message':
         ns.lobby.child(0).prepend("\nPlayer [" + msg.client + "] says: " + msg.text);
       break;
-
+      case 'game.new':
+        ns.lobby.child(0).prepend("\nNew Game! Player #" + msg.players.join(" vs Player #"));
+      break;
     }
-
-
-
   });
 })(jQuery);

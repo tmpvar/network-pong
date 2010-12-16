@@ -13,7 +13,7 @@ var connect = require('connect'),
           res.end();
         });
       })
-    ), game, clients = [], lobby = [], games = [], ready = [], clientId = 0;
+    ), game, clients = [], lobby = [], games = [], ready = [], clientId = 0, gameId;
 
 server.listen(1972);
 
@@ -59,6 +59,28 @@ game.on('connection', function(client) {
     switch (msg.type) {
       case 'ready' :
         client.status.ready = true;
+        ready.push(client);
+        if (ready.length > 1) {
+          // Unshift 2 clients off and create a game
+          gameId++;
+          var player1 = ready.shift(), player2 = ready.shift();
+
+          games.push({
+            gameId  : gameId,
+            clients : [player1, player2]
+          });
+          var clientMsg = {
+            type    : "game.new",
+            gameId  : gameId,
+            players : [ player1._id, player2._id ]
+          }
+          game.broadcast(clientMsg);
+
+          clientMsg.type = "game.join";
+          player1.send(clientMsg);
+          player2.send(clientMsg);
+
+        }
       break;
       case 'paddle':
 
