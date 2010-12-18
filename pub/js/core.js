@@ -66,7 +66,6 @@ window.networkPong = {};
       break;
       case 'game.end':
         // TODO: cleanup state
-        console.log("game ended!")
         ns.camera.target = ns.lobby;
         // TODO: "ready" should probably be done via a button
         ns.socket.send({

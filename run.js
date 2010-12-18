@@ -39,14 +39,10 @@ game.on('connection', function(client) {
     }
   });
 
-
   client.on('disconnect', function() {
-
     clients.splice(clients.indexOf(client));
     lobby.splice(lobby.indexOf(client));
 
-
-console.log(client.game)
     if (typeof client.game !== 'undefined') {
       var endGame = {
         type : 'game.end'
@@ -68,7 +64,6 @@ console.log(client.game)
         waiting : lobby.length
       }
     });
-
   });
 
   client.on('message', function(msg) {
@@ -79,19 +74,18 @@ console.log(client.game)
         ready.push(client);
         if (ready.length > 1) {
           // Unshift 2 clients off and create a game
-          var player1 = ready.shift(), player2 = ready.shift();
-
+          var player1 = ready.shift(), player2 = ready.shift(), gameId, clientMsg;
 
           games.push({
             gameId  : gameId,
             players : [player1, player2]
           });
-          var gameId = games.length-1;
+          gameId = games.length-1;
 
           player1.game = gameId;
           player2.game = gameId;
 
-          var clientMsg = {
+          clientMsg = {
             type    : "game.new",
             gameId  : gameId,
             players : [ player1._id, player2._id ]
@@ -116,12 +110,6 @@ console.log(client.game)
         msg.client = client._id;
         game.broadcast(msg);
       break;
-
-
     }
   })
-
-
 });
-
-
