@@ -37,29 +37,41 @@ window.networkPong = {};
 
     switch (msg.type) {
       case 'connected':
-        ns.lobby.child(0).fromString("connected!\n" + msg.clients.total + " players online");
+        ns.chat.fromString("connected!\n" + msg.clients.total + " players online");
       break;
       case 'player.connected' :
-        ns.lobby.child(0).append("\nPlayer Connected, " + msg.clients.total + " players online");
+        ns.chat.append("\nPlayer Connected, " + msg.clients.total + " players online");
       break;
       case 'player.ready' :
-        ns.lobby.child(0).append("\nPlayer Ready #" + msg.player);
-      break;      
+        ns.chat.append("\nPlayer Ready #" + msg.player);
+      break;
       case 'player.disconnected' :
-        ns.lobby.child(0).append("\nPlayer Disconnected, " + msg.clients.total + " players online");
+        ns.chat.append("\nPlayer Disconnected, " + msg.clients.total + " players online");
       break;
       case 'lobby.message':
-        ns.lobby.child(0).prepend("\nPlayer [" + msg.client + "] says: " + msg.text);
+        ns.chat.prepend("\nPlayer [" + msg.client + "] says: " + msg.text);
       break;
       case 'game.new':
-        ns.lobby.child(0).prepend("\nNew Game! Player #" + msg.players.join(" vs Player #"));
+        ns.chat.prepend("\nNew Game! Player #" + msg.players.join(" vs Player #"));
       break;
       case 'game.join':
+        var now = (new Date()).getTime();
+        ns.time = {
+          server : msg.time,
+          local  : now,
+          diff   : now - msg.time
+        }
         ns.camera.target = ns.game;
       break;
       case 'paddle.move':
         // TODO: do client prediction
         ns.paddles.remote.x = msg.x;
+      break;
+      case 'ball.update' :
+        ns.ball.x = msg.ball.x || ns.ball.x;
+        ns.ball.y = msg.ball.y || ns.ball.y;
+        ns.ball.velocity.x = msg.ball.velocity.x || ns.ball.velocity.x;
+        ns.ball.velocity.y = msg.ball.velocity.y || ns.ball.velocity.y;
       break;
       case 'game.end':
         // TODO: cleanup state

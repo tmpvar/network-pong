@@ -17,7 +17,7 @@
     ball.y = Math.floor(ns.canvas.height/2) - Math.floor(ball.height/2);
     ball.velocity = { x: 0, y: 0};
   },
-  initialVelocity = 1,
+  initialVelocity = 0,
   silentBallEvents = false;
 
   ns.game    = carena.build({
@@ -109,40 +109,12 @@
 
   ns.ball.x = Math.floor(ns.canvas.width/2) - Math.floor(ns.ball.width/2);
   ns.ball.y = Math.floor(ns.canvas.height/2) - Math.floor(ns.ball.height/2);
-  ns.ball.velocity.y = 1;
+  ns.ball.velocity.y = initialVelocity;
 
   // Move the ball
   setInterval(function() {
     var x           = ns.ball.x + ns.ball.velocity.x,
-        y           = ns.ball.y + ns.ball.velocity.y,
-        collisions  = ns.game.nodesByPoint(x, y),
-        collisions2 = ns.game.nodesByPoint(x+ns.ball.width, y+ns.ball.height)
-
-    if (collisions.length > 1 || collisions2.length > 1) {
-      if (collisions[1] === ns.paddles.local ||
-          collisions2[1] === ns.paddles.local)
-      {
-        ns.ball.velocity.y = -Math.abs(ns.ball.velocity.y);
-        ns.ball.velocity.x -= ns.paddles.local.velocity.x;
-      } else if (collisions[1] === ns.paddles.remote ||
-                 collisions2[1] === ns.paddles.remote)
-      {
-        ns.ball.velocity.y = Math.abs(ns.ball.velocity.y);
-        ns.ball.velocity.x -= ns.paddles.remote.velocity.x;
-      }
-    } else if (y < 0) {
-      resetBall(ns.ball);
-      ns.ball.velocity.y = 1;
-    } else if (y + ns.ball.height > ns.canvas.height) {
-      resetBall(ns.ball);
-      ns.ball.velocity.y = -1;
-    } else if (x <= 0) {
-      ns.ball.velocity.x = -ns.ball.velocity.x;
-      ns.ball.x = 1;
-    } else if (ns.ball.x + ns.ball.width > ns.canvas.width) {
-      ns.ball.velocity.x = -ns.ball.velocity.x;
-      ns.ball.x = ns.canvas.width - ns.ball.width;
-    }
+        y           = ns.ball.y + ns.ball.velocity.y;
 
     ns.ball.x += ns.ball.velocity.x;
     ns.ball.y += ns.ball.velocity.y;

@@ -13,7 +13,9 @@
         });
         input.fromString("");
         // TODO: fix cider.Cursor!
-        input.cursor.pos(0,0);
+        if (input.cursor && input.cursor.pos) {
+          input.cursor.pos(0,0);
+        }
       }
       ev.stopPropagation();
       ev.stopImmediatePropagation();
@@ -24,7 +26,7 @@
   // END HACK
 
 
-  var chat = carena.build({
+  var chat = ns.chat = carena.build({
     x      : 5,
     y      : 50,
     width  : ns.canvas.width-10,
