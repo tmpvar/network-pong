@@ -42,6 +42,7 @@ game.on('connection', function(client) {
   client.on('disconnect', function() {
     clients.splice(clients.indexOf(client));
     lobby.splice(lobby.indexOf(client));
+    ready.splice(ready.indexOf(client));
 
     if (typeof client.game !== 'undefined') {
       var endGame = {
@@ -61,7 +62,8 @@ game.on('connection', function(client) {
       clients   :  {
         total   : clients.length,
         ingame  : games.length*2,
-        waiting : lobby.length
+        waiting : lobby.length,
+        ready   : ready.length
       }
     });
   });
@@ -70,8 +72,17 @@ game.on('connection', function(client) {
     if (!msg || !msg.type) { return; }
     switch (msg.type) {
       case 'ready' :
+
+        if (ready.indexOf(client) < 0) {
+          ready.push(client);
+        }
+
+        game.broadcast({
+          type   : "player.ready",
+          player : client._id 
+        })
         client.status.ready = true;
-        ready.push(client);
+        
         if (ready.length > 1) {
           // Unshift 2 clients off and create a game
           var player1 = ready.shift(), player2 = ready.shift(), gameId, clientMsg;

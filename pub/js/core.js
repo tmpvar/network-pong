@@ -34,12 +34,6 @@ window.networkPong = {};
   ns.socket.on('message', function(msg) {
     if (!msg || !msg.type) { return; }
     // Ready for playtime.
-    if (!connected) {
-      ns.socket.send({
-        type : "ready"
-      });
-      connected = true;
-    }
 
     switch (msg.type) {
       case 'connected':
@@ -48,6 +42,9 @@ window.networkPong = {};
       case 'player.connected' :
         ns.lobby.child(0).append("\nPlayer Connected, " + msg.clients.total + " players online");
       break;
+      case 'player.ready' :
+        ns.lobby.child(0).append("\nPlayer Ready #" + msg.player);
+      break;      
       case 'player.disconnected' :
         ns.lobby.child(0).append("\nPlayer Disconnected, " + msg.clients.total + " players online");
       break;

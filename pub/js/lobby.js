@@ -26,9 +26,9 @@
 
   var chat = carena.build({
     x      : 5,
-    y      : 20,
+    y      : 50,
     width  : ns.canvas.width-10,
-    height : ns.canvas.height - 50,
+    height : ns.canvas.height - 80,
     text   : '',
     style  : {
       color : 'black',
@@ -47,7 +47,7 @@
       color : 'white',
       backgroundColor: 'white',
       paddingLeft: 5,
-      paddingTop : 7,
+      paddingTop : 0,
       cursorColor : 'white',
       selectionColor : "rgba(255,255,255,0.2)"
     }
@@ -57,20 +57,40 @@
       'cider.FocusTarget',
       'cider.TextualSelection',
       'cider.Clipboard'
+  ]),
+  ready = carena.build({
+    x      : 0,
+    y      : 0,
+    width  : ns.renderer.canvas.width - 10,
+    height : 30,
+    text   : '',
+    style  : {
+      color : 'white',
+      backgroundColor: 'red'
+    }
+  }, ['carena.Box',
+      'cider.Editable',
+      'cider.FocusTarget',
   ]);
 
+  ready.event.bind("mouse.down", function(name, data) {
+    if (data.target === ready) {
+      ns.socket.send({
+        type : "ready"
+      });
+    }
+  });
 
   input.font.set(ns.defaultFont);
   chat.font.set(ns.defaultFont);
 
   input.cursor.event.bind("keyboard.down", function(name, data) {
-    console.log(data);
     if (data.key === 13) {
       return false;
     }
   }, true)
 
-  ns.lobby.add(chat).add(input);
+  ns.lobby.add(chat).add(input).add(ready);
   // Jump immediately into the lobby.. for now
   ns.camera.target = ns.lobby;
 
