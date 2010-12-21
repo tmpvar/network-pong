@@ -33,20 +33,37 @@ window.networkPong = {};
   ns.socket.connect();
   ns.socket.on('message', function(msg) {
     if (!msg || !msg.type) { return; }
-    // Ready for playtime.
 
+    var now = (new Date()).getTime();
+
+    // This is a delta of both actual time difference (TZ), latency, and
+    // misconfiguration. Some of this inaccuracy can be illeviated by keeping
+    // a rolling average of the delta.
+    if (msg.time) {
+    console.log("hrm")
+      var delta = now - msg.time;
+      // Setup the server delta/etc
+      // TODO: make this less hackable
+      if (!ns.serverTimeDelta) {
+        ns.serverTimeDelta = delta;
+      } else {
+        ns.serverTimeDelta = (ns.serverTimeDelta + delta) / 2;
+      }
+    }
+
+    // Ready for playtime.
     switch (msg.type) {
       case 'connected':
         ns.chat.fromString("connected!\n" + msg.clients.total + " players online");
       break;
       case 'player.connected' :
-        ns.chat.append("\nPlayer Connected, " + msg.clients.total + " players online");
+        ns.chat.prepend("\nPlayer Connected, " + msg.clients.total + " players online");
       break;
       case 'player.ready' :
-        ns.chat.append("\nPlayer Ready #" + msg.player);
+        ns.chat.prepend("\nPlayer Ready #" + msg.player);
       break;
       case 'player.disconnected' :
-        ns.chat.append("\nPlayer Disconnected, " + msg.clients.total + " players online");
+        ns.chat.prepend("\nPlayer Disconnected, " + msg.clients.total + " players online");
       break;
       case 'lobby.message':
         ns.chat.prepend("\nPlayer [" + msg.client + "] says: " + msg.text);
@@ -55,24 +72,24 @@ window.networkPong = {};
         ns.chat.prepend("\nNew Game! Player #" + msg.players.join(" vs Player #"));
       break;
       case 'game.join':
-        var now = (new Date()).getTime();
         ns.time = {
           server : msg.time,
           local  : now,
           diff   : now - msg.time
-        }
+        };
+        ns.playerId = msg.playerId;
         ns.camera.target = ns.game;
       break;
       case 'paddle.move':
         // TODO: do client prediction
-        ns.paddles.remote.x = msg.x;
+        //ns.paddles.remote.x = msg.x;
       break;
-      case 'ball.update' :
+/*      case 'ball.update' :
         ns.ball.x = msg.ball.x || ns.ball.x;
         ns.ball.y = msg.ball.y || ns.ball.y;
         ns.ball.velocity.x = msg.ball.velocity.x || ns.ball.velocity.x;
         ns.ball.velocity.y = msg.ball.velocity.y || ns.ball.velocity.y;
-      break;
+      break;*/
       case 'game.end':
         // TODO: cleanup state
         ns.camera.target = ns.lobby;
@@ -81,6 +98,15 @@ window.networkPong = {};
           type : "ready"
         });
       break;
+
+      case 'snapshot.delta':
+        ns.handleDeltaSnapshot(msg);
+      break;
+
+      case 'snapshot.full':
+        ns.handleFullSnapshot(msg);
+      break;
+
     }
   });
 })(jQuery);

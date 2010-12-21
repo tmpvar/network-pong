@@ -6,15 +6,15 @@
   window.addEventListener('keydown', function(ev) {
 
     if (ev.keyCode === 13) {
-      if (input.toString().length > 0) {
+      if (chatInput.toString().length > 0) {
         ns.socket.send({
           type : "lobby.message",
-          text : input.toString()
+          text : chatInput.toString()
         });
-        input.fromString("");
+        chatInput.fromString("");
         // TODO: fix cider.Cursor!
-        if (input.cursor && input.cursor.pos) {
-          input.cursor.pos(0,0);
+        if (chatInput.cursor && chatInput.cursor.pos) {
+          chatInput.cursor.pos(0,0);
         }
       }
       ev.stopPropagation();
@@ -28,9 +28,9 @@
 
   var chat = ns.chat = carena.build({
     x      : 5,
-    y      : 50,
-    width  : ns.canvas.width-10,
-    height : ns.canvas.height - 80,
+    y      : 45,
+    width  : ns.canvas.width-5,
+    height : ns.canvas.height - 35,
     text   : '',
     style  : {
       color : 'black',
@@ -39,41 +39,43 @@
     }
   }, ['carena.Box', 'cider.Textual']),
 
-  input = carena.build({
+  chatInput = carena.build({
     x      : 5,
-    y      : ns.renderer.canvas.height - 30,
-    width  : ns.renderer.canvas.width - 10,
-    height : 30,
+    y      : ns.renderer.canvas.height - 25,
+    width  : ns.renderer.canvas.width - 5,
+    height : 20,
     text   : '',
     style  : {
       color : 'white',
-      backgroundColor: 'white',
+      backgroundColor: 'red',
       paddingLeft: 5,
       paddingTop : 0,
       cursorColor : 'white',
       selectionColor : "rgba(255,255,255,0.2)"
     }
   }, ['carena.Box',
-      'cider.Textual',
       'cider.Editable',
       'cider.FocusTarget',
-      'cider.TextualSelection',
-      'cider.Clipboard'
   ]),
   ready = carena.build({
-    x      : 0,
-    y      : 0,
-    width  : ns.renderer.canvas.width - 10,
-    height : 30,
-    text   : '',
+    x      : 5,
+    y      : 5,
+    width  : ns.renderer.canvas.width - 5,
+    height : 40,
+    text   : 'Click here to get in line to play!',
     style  : {
       color : 'white',
-      backgroundColor: 'red'
+      backgroundColor: 'red',
+      paddingTop: 10,
+      paddingLeft: 70
     }
   }, ['carena.Box',
       'cider.Editable',
       'cider.FocusTarget',
   ]);
+
+
+  ready.font.set(ns.defaultFont);
 
   ready.event.bind("mouse.down", function(name, data) {
     if (data.target === ready) {
@@ -83,16 +85,16 @@
     }
   });
 
-  input.font.set(ns.defaultFont);
+  chatInput.font.set(ns.defaultFont);
   chat.font.set(ns.defaultFont);
 
-  input.cursor.event.bind("keyboard.down", function(name, data) {
+  chatInput.cursor.event.bind("keyboard.down", function(name, data) {
     if (data.key === 13) {
       return false;
     }
   }, true)
 
-  ns.lobby.add(chat).add(input).add(ready);
+  ns.lobby.add(chat).add(chatInput).add(ready);
   // Jump immediately into the lobby.. for now
   ns.camera.target = ns.lobby;
 

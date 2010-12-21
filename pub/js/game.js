@@ -1,4 +1,6 @@
 (function(ns) {
+  var snapshot = null;
+
 
   // Build the game objects
   paddleRenderStep = function(paddle) {
@@ -90,20 +92,25 @@
   // Setup the events
   ns.game.event.bind("mouse.move", function(name, data) {
     var half = ns.paddles.local.width/2,
+        old  = ns.paddles.local.x,
         x    = data.mouse.x-half;
 
-    if (x+ns.paddles.local.width+half > ns.canvas.width) {
+    if (x+ns.paddles.local.width > ns.canvas.width) {
       x = (ns.canvas.width - ns.paddles.local.width);
     } else if (x < 0) {
       x = 0;
     }
-    ns.paddles.local.velocity.x = x-ns.paddles.local.x;
+    ns.paddles.local.velocity.x = old - ns.paddles.local.x;
 
     ns.paddles.local.x = x;
+
     ns.socket.send({
-      type : "paddle.move",
-      x    : x
-    })
+      type     : "paddle.move",
+      x        : x,
+      velocity : {
+        x : ns.paddles.local.velocity.x
+      }
+    });
 
   });
 
@@ -113,12 +120,66 @@
 
   // Move the ball
   setInterval(function() {
-    var x           = ns.ball.x + ns.ball.velocity.x,
-        y           = ns.ball.y + ns.ball.velocity.y;
+    var now = (new Date()).getTime();
+    if (snapshot && snapshot.ball) {
+      var dy = snapshot.ball.y - ns.ball.y,
+          dx = snapshot.ball.x - ns.ball.x;
 
-    ns.ball.x += ns.ball.velocity.x;
-    ns.ball.y += ns.ball.velocity.y;
+      // Since the server sent us a velocity at a point in the past, and we know
+      // with relativly decent accuracy how long ago, we can simulate this
+      // movement.
+      ns.ball.velocity = snapshot.ball.velocity;
+      ns.ball.y  = snapshot.ball.y + (ns.ball.velocity.y * ((now-(snapshot.time - ns.serverTimeDelta)))/16);
+      ns.ball.x  = snapshot.ball.x + (ns.ball.velocity.x * ((now-(snapshot.time - ns.serverTimeDelta)))/16)
+      snapshot = null;
+
+    } else {
+      var x           = ns.ball.x + ns.ball.velocity.x,
+          y           = ns.ball.y + ns.ball.velocity.y;
+
+      ns.ball.x += ns.ball.velocity.x;
+      ns.ball.y += ns.ball.velocity.y;
+    }
   }, 16);
+
+  var paddleTimer = null;
+
+  // Handle an authoritive snapshot from the server
+  ns.handleDeltaSnapshot = function(data) {
+    snapshot = data.snapshot;
+    snapshot.time = (new Date()).getTime();
+
+    if (snapshot && snapshot.paddles) {
+      var remotePaddle, remoteMovementDelta;
+
+      if (paddleTimer) {
+        clearInterval(paddleTimer);
+        paddleTimer = null;
+      }
+
+      remotePaddle = (ns.playerId === 0)  ?
+                      snapshot.paddles[1] :
+                      snapshot.paddles[0];
+
+      remoteMovementDelta = Math.floor((remotePaddle.x-ns.paddles.remote.x)/16);
+      paddleTimer = setInterval(function() {
+        ns.paddles.remote.x += remoteMovementDelta;
+        if (remoteMovementDelta > 0) {
+          if (ns.paddles.remote.x >= remotePaddle.x) {
+            ns.paddles.remote.x = remotePaddle.x;
+            clearInterval(paddleTimer);
+            paddleTimer = null;
+          }
+        } else {
+          if (ns.paddles.remote.x <= remotePaddle.x) {
+            ns.paddles.remote.x = remotePaddle.x;
+            clearInterval(paddleTimer);
+            paddleTimer = null;
+          }
+        }
+      }, 16);
+    }
+  };
 
 
 })(window.networkPong);

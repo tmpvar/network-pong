@@ -1,11 +1,13 @@
 var connect = require('connect'),
     carena  = require('carena').server.node.connect,
     cider   = require('cider').server.node.connect,
+    motionjs = require('motion').server.node.connect,
     io      = require('socket.io'),
     server  = connect.createServer(
       connect.staticProvider(__dirname + "/pub"),
       carena(),
       cider(),
+      motionjs(),
       connect.logger(),
       connect.router(function(app) {
         app.get('/', function(req, res) {
@@ -31,6 +33,7 @@ game.on('connection', function(client) {
   client.status = { ready : false };
 
   game.broadcast({
+    time    : (new Date()).getTime(),
     type      : 'player.connected',
     clients   :  {
       total   : clients.length,
@@ -46,8 +49,11 @@ game.on('connection', function(client) {
 
     if (typeof client.game !== 'undefined') {
       var endGame = {
-        type : 'game.end'
+        type : 'game.end',
+        time : (new Date()).getTime()
       };
+
+      clearTimeout(games[client.game].timer);
 
       // Only 2 players, one or the other..
       if (games[client.game].players[0] === client) {
@@ -59,6 +65,7 @@ game.on('connection', function(client) {
 
     game.broadcast({
       type      : 'player.disconnected',
+      time      : (new Date()).getTime(),
       clients   :  {
         total   : clients.length,
         ingame  : games.length*2,
@@ -83,6 +90,7 @@ game.on('connection', function(client) {
 
         game.broadcast({
           type   : "player.ready",
+          time    : (new Date()).getTime(),
           player : client._id
         })
         client.status.ready = true;
@@ -97,17 +105,18 @@ game.on('connection', function(client) {
                 gameId  : gameId,
                 ball    : resetBall(),
                 paddles : [
-                  { x: 0, y: 0 },
-                  { x: 0, y: 0 }
-                ],
-                players : [player1, player2]
+                  { x: 0, y: 0, velocity : { x: 0, y: 0 }},
+                  { x: 0, y: 0, velocity : { x: 0, y: 0 }}
+                ]
               };
 
           _game.ball.velocity.y = 1;
           games.push(_game);
 
           player1.game = gameId;
+          player1.playerId = 0;
           player2.game = gameId;
+          player2.playerId = 1;
 
           clientMsg = {
             type    : "game.new",
@@ -118,7 +127,10 @@ game.on('connection', function(client) {
           game.broadcast(clientMsg);
 
           clientMsg.type = "game.join";
+          clientMsg.playerId = player1.playerId;
           player1.send(clientMsg);
+
+          clientMsg.playerId = player2.playerId;
           player2.send(clientMsg);
 
 
@@ -149,72 +161,42 @@ game.on('connection', function(client) {
               _game.ball.x = x;
               _game.ball.y = y;
             }
+          }, 16);
 
-/*
 
-            if (collisions.length > 1 || collisions2.length > 1) {
-              if (collisions[1] === ns.paddles.local ||
-                  collisions2[1] === ns.paddles.local)
-              {
-                ns.ball.velocity.y = -Math.abs(ns.ball.velocity.y);
-                ns.ball.velocity.x -= ns.paddles.local.velocity.x;
-              } else if (collisions[1] === ns.paddles.remote ||
-                         collisions2[1] === ns.paddles.remote)
-              {
-                ns.ball.velocity.y = Math.abs(ns.ball.velocity.y);
-                ns.ball.velocity.x -= ns.paddles.remote.velocity.x;
-              }
-            } else if (y < 0) {
-              resetBall(ns.ball);
-              ns.ball.velocity.y = 1;
-            } else if (y + ns.ball.height > ns.canvas.height) {
-              resetBall(ns.ball);
-              ns.ball.velocity.y = -1;
-            } else if (x <= 0) {
-              ns.ball.velocity.x = -ns.ball.velocity.x;
-              ns.ball.x = 1;
-            } else if (ns.ball.x + ns.ball.width > ns.canvas.width) {
-              ns.ball.velocity.x = -ns.ball.velocity.x;
-              ns.ball.x = ns.canvas.width - ns.ball.width;
-            }*/
+          setInterval(function() {
+            var snapshot = JSON.parse(JSON.stringify(_game));
+            snapshot.time = (new Date).getTime();
 
             player1.send({
-              type : "ball.update",
-              ball : _game.ball
+              type : "snapshot.delta",
+              time    : (new Date()).getTime(),
+              snapshot : snapshot
             });
 
             // inverse the direction so it makes sense
+            snapshot.ball.y = 500 - snapshot.ball.y;
+            snapshot.ball.velocity.y = - snapshot.ball.velocity.y;
             player2.send({
-              type: "ball.update",
-              ball: {
-                x : _game.ball.x,
-                y : 500-_game.ball.y,
-                velocity: {
-                  x : _game.ball.velocity.x,
-                  y : -_game.ball.velocity.y
-                }
-              }
+              type : "snapshot.delta",
+              time    : (new Date()).getTime(),
+              snapshot : snapshot
             });
-          }, 10);
-
-
+          }, 100);
         }
       break;
       case 'paddle.move':
-        // Only 2 players, one or the other..
-        if (games[client.game].players[0] === client) {
-          games[client.game].players[1].send(msg);
-          games[client.game].paddles[0].x = msg.x;
-          games[client.game].paddles[0].y = msg.y;
-        } else {
-          games[client.game].players[0].send(msg);
-          games[client.game].paddles[1].x = msg.x;
-          games[client.game].paddles[1].y = msg.y;
+        if (games[client.game]) {
+          games[client.game].paddles[client.playerId].x = msg.x;
+          games[client.game].paddles[client.playerId].y = msg.y;
+          games[client.game].paddles[client.playerId].velocity = msg.velocity || {x: 0, y: 0};
         }
       break;
 
       case 'lobby.message':
         msg.client = client._id;
+        msg.time   = (new Date()).getTime();
+
         game.broadcast(msg);
       break;
     }
