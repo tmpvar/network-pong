@@ -1,13 +1,11 @@
 var connect = require('connect'),
     carena  = require('carena').server.node.connect,
     cider   = require('cider').server.node.connect,
-    motionjs = require('motion').server.node.connect,
     io      = require('socket.io'),
     server  = connect.createServer(
       connect.staticProvider(__dirname + "/pub"),
       carena(),
       cider(),
-      motionjs(),
       connect.logger(),
       connect.router(function(app) {
         app.get('/', function(req, res) {
