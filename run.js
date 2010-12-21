@@ -53,11 +53,13 @@ game.on('connection', function(client) {
 
       clearTimeout(games[client.game].timer);
 
-      // Only 2 players, one or the other..
-      if (games[client.game].players[0] === client) {
-        games[client.game].players[1].send(endGame);
-      } else {
-        games[client.game].players[0].send(endGame);
+      if (games[client.game] && games[client.game].players && games[client.game].players[0]) {
+        // Only 2 players, one or the other..
+        if (games[client.game].players[0] === client) {
+          games[client.game].players[1].send(endGame);
+        } else {
+          games[client.game].players[0].send(endGame);
+        }
       }
     }
 
